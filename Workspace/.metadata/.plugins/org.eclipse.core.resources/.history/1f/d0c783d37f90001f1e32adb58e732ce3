@@ -1,0 +1,18 @@
+package rmi_server;
+
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+
+public class RMI_Server2 {
+    public static void main(String[] args) {
+        try {
+            // Tạo đối tượng RMI để đồng bộ dữ liệu
+        	LoginSyncImpl dbSyncB = new LoginSyncImpl();
+            Registry registry = LocateRegistry.createRegistry(1100); // Cổng 1099 cho Server B
+            registry.bind("ServerA", dbSyncB);
+            System.out.println("Server B đang chạy...");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,0 +1,84 @@
+package rmi_server;
+
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
+
+public class LoginSyncImpl extends UnicastRemoteObject implements LoginSyncInterface {
+    private Connection connection;
+    private static final long serialVersionUID = 1L;
+
+    protected LoginSyncImpl() throws RemoteException {
+        try {
+            // Sử dụng ConnectDB để kết nối tới cơ sở dữ liệu
+            connection = ConnectDB.ConnectionDB();
+            if (connection != null) {
+                System.out.println("Kết nối cơ sở dữ liệu thành công!");
+            } else {
+                System.out.println("Kết nối cơ sở dữ liệu thất bại!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Kiểm tra xem người dùng đã đăng nhập hay chưa
+    @Override
+    public boolean isUserLoggedIn(String username) throws RemoteException {
+        int status = 0;
+        try {
+            // Sử dụng PreparedStatement với tham số
+            PreparedStatement stmt = connection.prepareStatement("SELECT U_status FROM cr_user WHERE U_username = ?");
+            stmt.setString(1, username); // Thiết lập tham số username
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                status = rs.getInt("U_status"); // Lấy giá trị status từ kết quả truy vấn
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return status == 1; // Nếu status là 1 thì trả về true, nghĩa là người dùng đã đăng nhập
+    }
+
+
+    // Cập nhật trạng thái đăng nhập của người dùng
+    @Override
+    public void updateUserStatus(String username, boolean isLoggedIn) throws RemoteException {
+        try {
+            PreparedStatement stmt = connection.prepareStatement("UPDATE cr_user SET U_status = ? WHERE U_username = ?");
+            stmt.setInt(1, isLoggedIn ? 1 : 0); // Chuyển đổi trạng thái boolean thành INT
+            stmt.setString(2, username); // Thiết lập tham số username
+            stmt.executeUpdate(); // Thực thi câu lệnh UPDATE
+            System.out.println("Trạng thái người dùng " + username + " đã được cập nhật.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+	@Override
+	public void updateBanking(String sender, String receiver, String money) throws RemoteException {
+	    String sql = "INSERT INTO banking (id_banking, sender, receiver, money) VALUES (?, ?, ?, ?)";
+
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+	        pstmt.setNull(1, java.sql.Types.INTEGER); // Set null cho id_banking
+	        pstmt.setString(2, sender);
+	        pstmt.setString(3, receiver);
+	        pstmt.setString(4, money);
+	        
+	        pstmt.executeUpdate();
+	    } catch (SQLException e) {
+	        // Xử lý các lỗi SQL khác
+	        throw new RemoteException("Lỗi SQL: " + e.getMessage(), e);
+	    } catch (Exception e) {
+	        // Xử lý các lỗi khác
+	        throw new RemoteException("Lỗi không xác định: " + e.getMessage(), e);
+	    }
+	}
+
+}

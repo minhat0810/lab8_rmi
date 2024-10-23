@@ -1,0 +1,7 @@
+INDEX VERSION 1.131+C:\Users\PC\eclipse-workspace\Project Clone\LAB8\lab8_rmi\Workspace\.metadata\.plugins\org.eclipse.jdt.core
+2220064209.index
+1865797976.index
+427469938.index
+3036331898.index
+4151420137.index
+2573273304.index

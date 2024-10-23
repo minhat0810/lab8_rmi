@@ -1,0 +1,52 @@
+package rmi_server;
+
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+public class LoginSyncImpl extends UnicastRemoteObject implements LoginSyncInterface {
+    private Connection connection;
+
+    protected LoginSyncImpl() throws RemoteException {
+        try {
+            // Kết nối tới CSDL của Server A
+            connection = ConnectDB.ConnectionDB();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Kiểm tra xem người dùng đã đăng nhập hay chưa
+    @Override
+    public boolean isUserLoggedIn(String username) throws RemoteException {
+        boolean isLoggedIn = false;
+        try {
+            PreparedStatement stmt = connection.prepareStatement("SELECT status FROM users WHERE username = ?");
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                isLoggedIn = rs.getBoolean("is_logged_in");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return isLoggedIn;
+    }
+
+    // Cập nhật trạng thái đăng nhập của người dùng
+    @Override
+    public void updateUserStatus(String username, boolean isLoggedIn) throws RemoteException {
+        try {
+            PreparedStatement stmt = connection.prepareStatement("UPDATE users SET is_logged_in = ? WHERE username = ?");
+            stmt.setBoolean(1, isLoggedIn);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+            System.out.println("Trạng thái người dùng " + username + " đã được cập nhật.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

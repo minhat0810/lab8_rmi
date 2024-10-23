@@ -1,0 +1,10 @@
+/**
+ * 
+ */
+/**
+ * @author PC
+ *
+ */
+module RMI_Server {
+	requires java.rmi;
+}
